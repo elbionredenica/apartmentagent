@@ -1,16 +1,23 @@
 "use client";
 
-const CHIPS = ["No pets", "ASAP", "Yes", "No"];
-
 interface QuickReplyChipsProps {
+  chips: string[];
   onSelect: (text: string) => void;
   disabled?: boolean;
 }
 
-export function QuickReplyChips({ onSelect, disabled }: QuickReplyChipsProps) {
+export function QuickReplyChips({
+  chips,
+  onSelect,
+  disabled,
+}: QuickReplyChipsProps) {
+  if (chips.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex gap-2 flex-wrap">
-      {CHIPS.map((chip) => (
+      {chips.map((chip) => (
         <button
           key={chip}
           onClick={() => onSelect(chip)}

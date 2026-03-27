@@ -11,9 +11,15 @@ interface ChatPanelProps {
   messages: Message[];
   onSend: (text: string) => void;
   isLoading: boolean;
+  quickReplies?: string[];
 }
 
-export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
+export function ChatPanel({
+  messages,
+  onSend,
+  isLoading,
+  quickReplies = [],
+}: ChatPanelProps) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +54,11 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
 
       {/* Input area */}
       <div className="border-t border-border px-6 py-4">
-        <QuickReplyChips onSelect={handleChipSelect} disabled={isLoading} />
+        <QuickReplyChips
+          chips={quickReplies}
+          onSelect={handleChipSelect}
+          disabled={isLoading}
+        />
         <form onSubmit={handleSubmit} className="flex gap-3 mt-3">
           <input
             ref={inputRef}

@@ -1,5 +1,7 @@
 import type { DraftProfile } from "./user";
 
+export type ChatPhase = "collecting" | "review" | "confirmed";
+
 export interface Message {
   id: string;
   role: "user" | "agent";
@@ -13,9 +15,11 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
+  phase: ChatPhase;
   message: string;
   profilePatch: Partial<DraftProfile>;
   missingFields: string[];
+  quickReplies?: string[];
   readyToStart: boolean;
   action?: "START_SEARCH";
   preferences?: DraftProfile;

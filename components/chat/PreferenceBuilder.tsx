@@ -9,17 +9,22 @@ import {
   PawPrint,
   ShieldAlert,
   Star,
+  Sparkles,
   Calendar,
   HelpCircle,
+  FileText,
 } from "lucide-react";
+import type { ChatPhase } from "@/types";
 
 interface PreferenceBuilderProps {
   profile: Partial<DraftProfile>;
+  phase?: ChatPhase;
   confirmed?: boolean;
 }
 
 export function PreferenceBuilder({
   profile,
+  phase = "collecting",
   confirmed = false,
 }: PreferenceBuilderProps) {
   const cards: { icon: typeof DollarSign; category: string; value: string }[] =
@@ -33,11 +38,15 @@ export function PreferenceBuilder({
     });
   }
 
-  if (profile.locations && profile.locations.length > 0) {
+  const locationParts = [profile.state, ...(profile.cities ?? profile.locations ?? [])]
+    .filter(Boolean)
+    .join(" • ");
+
+  if (locationParts) {
     cards.push({
       icon: MapPin,
       category: "Location",
-      value: profile.locations.join(", "),
+      value: locationParts,
     });
   }
 
@@ -79,6 +88,14 @@ export function PreferenceBuilder({
     });
   }
 
+  if (profile.niceToHaves && profile.niceToHaves.length > 0) {
+    cards.push({
+      icon: Sparkles,
+      category: "Nice-to-Haves",
+      value: profile.niceToHaves.join(", "),
+    });
+  }
+
   if (profile.moveInTimeline) {
     cards.push({
       icon: Calendar,
@@ -95,6 +112,14 @@ export function PreferenceBuilder({
     });
   }
 
+  if (profile.notes) {
+    cards.push({
+      icon: FileText,
+      category: "Notes",
+      value: profile.notes,
+    });
+  }
+
   if (cards.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -107,9 +132,16 @@ export function PreferenceBuilder({
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-semibold text-ink-mid uppercase tracking-wide">
-        Your Preferences
-      </h3>
+      <div>
+        <h3 className="text-sm font-semibold text-ink-mid uppercase tracking-wide">
+          {phase === "review" ? "Review Before Calls" : "Your Preferences"}
+        </h3>
+        {phase === "review" && (
+          <p className="text-xs text-ink-muted mt-1">
+            Double-checking the brief before the calling flow starts.
+          </p>
+        )}
+      </div>
       {cards.map((card) => (
         <PreferenceCard
           key={card.category}

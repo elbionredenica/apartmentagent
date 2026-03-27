@@ -1,29 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ChatResponse } from "@/types";
-import { MOCK_CHAT_RESPONSES } from "@/lib/mock-data";
+import type { ChatRequest } from "@/types";
+import { getChatResponse } from "@/lib/chat-intake";
+import {
+  getModelGeneratedChatResponse,
+  shouldUseModelGeneratedChat,
+} from "@/lib/model-generated-chat";
 
 export async function POST(request: NextRequest) {
-  const { messages } = await request.json();
+  const body = (await request.json()) as Partial<ChatRequest>;
+  const chatRequest: ChatRequest = {
+    messages: body.messages ?? [],
+    draftProfile: body.draftProfile ?? {},
+  };
 
-  // Count user messages to determine which scripted response to return
-  const userMessageCount = messages.filter(
-    (m: { role: string }) => m.role === "user"
-  ).length;
+  if (shouldUseModelGeneratedChat()) {
+    try {
+      const response = await getModelGeneratedChatResponse(chatRequest);
 
-  if (process.env.ENABLE_LIVE_CHAT === "true") {
-    // Phase 2: forward to Claude API with preference extraction system prompt
-    // For now, fall through to mock
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return NextResponse.json(response);
+    } catch (error) {
+      console.error("Model-generated chat failed, falling back to local intake.", error);
+    }
   }
 
-  // Mock mode: return scripted response based on conversation progress
-  const responseIndex = Math.min(
-    userMessageCount,
-    MOCK_CHAT_RESPONSES.length - 1
-  );
-  const response: ChatResponse = MOCK_CHAT_RESPONSES[responseIndex];
+  const response = getChatResponse(chatRequest);
 
   // Simulate slight network delay for realism
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
   return NextResponse.json(response);
 }

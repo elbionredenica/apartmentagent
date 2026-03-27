@@ -3,8 +3,6 @@ import type {
   ListingCard,
   CallTranscript,
   Viewing,
-  Message,
-  ChatResponse,
 } from "@/types";
 
 // Demo user matching seed.sql
@@ -22,6 +20,8 @@ export const mockUser: User = {
   petWeightLbs: 60,
   dealbreakers: ["no_pets", "ground_floor_only"],
   preferences: {
+    state: "California",
+    cities: ["San Francisco"],
     locations: ["SOMA", "Mission District"],
     minBathrooms: 1,
     mustHaves: ["in-unit laundry", "quiet"],
@@ -250,73 +250,5 @@ export const mockViewings: Viewing[] = [
     address: "789 Valencia St, #3",
     rent: 3200,
     propertyManager: "Valencia Homes",
-  },
-];
-
-// Scripted chat responses for mock mode
-export const MOCK_CHAT_RESPONSES: ChatResponse[] = [
-  {
-    message:
-      "Hey! I'm your apartment hunting agent. I'll find and call listings for you, ask your specific questions, and only book viewings worth your time. Let's start — what's the max you want to spend on rent each month?",
-    profilePatch: {},
-    missingFields: [
-      "maxBudget",
-      "locations",
-      "bedrooms",
-      "petDetails",
-      "dealbreakers",
-    ],
-    readyToStart: false,
-  },
-  {
-    message:
-      "Got it, up to $3,000/month. Where in the city are you looking? Any specific neighborhoods?",
-    profilePatch: { maxBudget: 3000 },
-    missingFields: [
-      "locations",
-      "bedrooms",
-      "petDetails",
-      "dealbreakers",
-    ],
-    readyToStart: false,
-  },
-  {
-    message:
-      "SOMA and Mission — great choices. How many bedrooms do you need?",
-    profilePatch: { locations: ["SOMA", "Mission District"] },
-    missingFields: ["bedrooms", "petDetails", "dealbreakers"],
-    readyToStart: false,
-  },
-  {
-    message:
-      "2 to 3 bedrooms, noted. Do you have any pets? If so, what kind and how much do they weigh?",
-    profilePatch: { minBedrooms: 2, maxBedrooms: 3 },
-    missingFields: ["petDetails", "dealbreakers"],
-    readyToStart: false,
-  },
-  {
-    message:
-      "A 60-pound dog — I'll make sure to ask about pet policies and weight limits on every call. Last thing — are there any absolute dealbreakers? Things that would make you immediately pass on a place?",
-    profilePatch: { hasPet: true, petType: "dog", petWeightLbs: 60 },
-    missingFields: ["dealbreakers"],
-    readyToStart: false,
-  },
-  {
-    message:
-      "Got everything I need. No-pet buildings and ground-floor-only units are off the table. I'm starting calls on 8 listings now — I'll book the ones worth your time.",
-    profilePatch: { dealbreakers: ["no_pets", "ground_floor_only"] },
-    missingFields: [],
-    readyToStart: true,
-    action: "START_SEARCH",
-    preferences: {
-      maxBudget: 3000,
-      minBedrooms: 2,
-      maxBedrooms: 3,
-      hasPet: true,
-      petType: "dog",
-      petWeightLbs: 60,
-      dealbreakers: ["no_pets", "ground_floor_only"],
-      locations: ["SOMA", "Mission District"],
-    },
   },
 ];

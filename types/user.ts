@@ -1,4 +1,6 @@
 export interface Preferences {
+  state?: string;
+  cities?: string[];
   locations: string[];
   minBathrooms?: number;
   mustHaves: string[];
@@ -24,6 +26,8 @@ export interface User {
 }
 
 export interface DraftProfile {
+  state?: string;
+  cities?: string[];
   maxBudget?: number;
   minBedrooms?: number;
   maxBedrooms?: number;
@@ -33,6 +37,8 @@ export interface DraftProfile {
   dealbreakers?: string[];
   locations?: string[];
   mustHaves?: string[];
+  niceToHaves?: string[];
   moveInTimeline?: string;
   customQuestions?: string[];
+  notes?: string;
 }
