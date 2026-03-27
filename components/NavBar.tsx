@@ -1,16 +1,52 @@
 "use client";
 
 import { Link } from "next-view-transitions";
+import { useUser } from "@auth0/nextjs-auth0/client";
 import { usePathname } from "next/navigation";
-import { User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import { useState } from "react";
+import type { Viewer } from "@/lib/session";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/intel", label: "Intel" },
 ];
 
-export function NavBar() {
+interface NavBarProps {
+  viewer: Viewer;
+}
+
+export function NavBar({ viewer }: NavBarProps) {
   const pathname = usePathname();
+  const { user } = useUser();
+  const [isExitingDemo, setIsExitingDemo] = useState(false);
+
+  const auth0User = viewer?.mode === "auth0" ? user : undefined;
+  const displayName =
+    auth0User?.name ??
+    viewer?.name ??
+    auth0User?.email ??
+    viewer?.email ??
+    "Account";
+  const avatarSrc = auth0User?.picture ?? viewer?.picture;
+
+  async function handleDemoLogout() {
+    setIsExitingDemo(true);
+
+    try {
+      const response = await fetch("/api/demo/logout", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to end demo session");
+      }
+
+      window.location.assign("/");
+    } catch {
+      setIsExitingDemo(false);
+    }
+  }
 
   return (
     <nav data-navbar className="h-20 bg-white border-b border-border px-20 flex items-center justify-between">
@@ -36,10 +72,46 @@ export function NavBar() {
           </Link>
         ))}
 
-        {/* Avatar placeholder */}
-        <button className="w-8 h-8 rounded-full bg-off-white border border-border flex items-center justify-center cursor-pointer hover:border-ink-mid transition-colors duration-160">
-          <User size={16} className="text-ink-mid" />
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end leading-tight">
+            <span className="text-sm font-semibold text-ink">{displayName}</span>
+            <span className="text-xs text-ink-muted">
+              {viewer?.mode === "auth0" ? "Authenticated" : "Demo session"}
+            </span>
+          </div>
+
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              alt={displayName}
+              className="w-9 h-9 rounded-full border border-border object-cover"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-off-white border border-border flex items-center justify-center">
+              <User size={16} className="text-ink-mid" />
+            </div>
+          )}
+
+          {viewer?.mode === "auth0" ? (
+            <a
+              href="/auth/logout"
+              className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-ink transition-colors duration-160 hover:border-ink-mid"
+            >
+              <LogOut size={14} />
+              Log Out
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDemoLogout}
+              disabled={isExitingDemo}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-ink transition-colors duration-160 hover:border-ink-mid disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <LogOut size={14} />
+              {isExitingDemo ? "Exiting..." : "Exit Demo"}
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/elbionredenica/apartmentagent#readme",
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.16.1",
     "motion": "^12.38.0",
     "next": "^16.2.1",
     "next-view-transitions": "^0.3.5",

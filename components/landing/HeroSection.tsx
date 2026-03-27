@@ -43,10 +43,25 @@ export function HeroSection({ onDemoEntry, loading }: HeroSectionProps) {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={onDemoEntry} disabled={loading}>
+            <a
+              href="/auth/login?screen_hint=signup"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-6 py-3.5 text-base font-semibold text-white transition-all duration-160 hover:bg-accent-dark"
+            >
+              Sign Up with Auth0
+              <ArrowRight size={16} />
+            </a>
+            <a
+              href="/auth/login"
+              className="inline-flex items-center justify-center rounded-md border-[1.5px] border-border px-6 py-3.5 text-base font-semibold text-ink transition-all duration-160 hover:border-ink-mid"
+            >
+              Log In
+            </a>
+          </div>
+
+          <div className="mt-3 flex flex-col sm:flex-row gap-3">
+            <Button onClick={onDemoEntry} disabled={loading} variant="ghost">
               <span className="flex items-center gap-2">
-                {loading ? "Loading..." : "Try the Demo"}
-                {!loading && <ArrowRight size={16} />}
+                {loading ? "Loading demo..." : "Try Demo Instead"}
               </span>
             </Button>
             <Button variant="secondary" onClick={scrollToHowItWorks}>

@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getUserId } from "@/lib/session";
+import { getViewer } from "@/lib/session";
 import { ChatClient } from "./ChatClient";
 
 export default async function ChatPage() {
-  const userId = await getUserId();
-  if (!userId) {
+  const viewer = await getViewer();
+  if (!viewer) {
     redirect("/");
   }
 

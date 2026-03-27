@@ -17,24 +17,26 @@ export function CTASection({ onDemoEntry, loading }: CTASectionProps) {
           Ready to let AI handle the phone calls?
         </h2>
         <p className="text-base text-ink-mid mb-8">
-          Try the demo — set your preferences and watch the agent work.
+          Create a real account to save your place, or take the demo path for a quick walkthrough.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={onDemoEntry} disabled={loading}>
-            <span className="flex items-center gap-2">
-              {loading ? "Loading..." : "Try the Demo"}
-              {!loading && <ArrowRight size={16} />}
-            </span>
+          <a
+            href="/auth/login?screen_hint=signup"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-6 py-3.5 text-base font-semibold text-white transition-all duration-160 hover:bg-accent-dark"
+          >
+            Sign Up
+            <ArrowRight size={16} />
+          </a>
+          <a
+            href="/auth/login"
+            className="inline-flex items-center justify-center rounded-md border-[1.5px] border-border px-6 py-3.5 text-base font-semibold text-ink transition-all duration-160 hover:border-ink-mid"
+          >
+            Log In
+          </a>
+          <Button onClick={onDemoEntry} disabled={loading} variant="ghost">
+            {loading ? "Loading demo..." : "Try Demo"}
           </Button>
-          <div className="relative group">
-            <Button variant="secondary" disabled>
-              Continue with Auth0
-            </Button>
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-ink-muted whitespace-nowrap">
-              Coming soon
-            </div>
-          </div>
         </div>
       </AnimateOnScroll>
     </section>
