@@ -1,0 +1,13 @@
+{
+  "name": "Store Call Transcripts",
+  "version": "1.0.0",
+  "description": "Automatically store call transcripts to Ghost database after each call completes",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": [".*bland.*", ".*call.*"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Store the call transcript, extracted data, and outcome to the call_transcripts table in Ghost. Include compliance check results. Update the user_listing_states table with the new status."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Pre-Screen Compliance Check",
+  "version": "1.0.0",
+  "description": "Review Bland AI call scripts before execution to ensure Fair Housing compliance",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [".*bland.*", ".*call.*"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review this call script for Fair Housing compliance. Check that it does not ask about race, national origin, religion, sex, familial status, disability, or age. Verify all questions are permitted under Fair Housing Act. If compliant, proceed. If not, explain the violation and do not make the call."
+  }
+}

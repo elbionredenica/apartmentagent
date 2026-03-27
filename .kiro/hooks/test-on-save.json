@@ -1,0 +1,14 @@
+{
+  "name": "Run Tests on Save",
+  "version": "1.0.0",
+  "description": "Run relevant tests when Python files are saved",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["*.py"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "pytest tests/ -v --tb=short",
+    "timeout": 30
+  }
+}

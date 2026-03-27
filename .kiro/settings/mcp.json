@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "ghost": {
+      "command": "ghost",
+      "args": ["mcp", "start", "stdio"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "ghost_list",
+        "ghost_status",
+        "ghost_schema",
+        "search_docs",
+        "view_skill"
+      ]
+    }
+  }
+}
