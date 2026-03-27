@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import type { Message, DraftProfile, ChatResponse } from "@/types";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { PreferenceBuilder } from "@/components/chat/PreferenceBuilder";
 
 export function ChatClient() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draftProfile, setDraftProfile] = useState<Partial<DraftProfile>>({});
   const [isLoading, setIsLoading] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
 
@@ -13,7 +13,7 @@ export function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="h-20 bg-white border-b border-border px-20 flex items-center justify-between">
+    <nav data-navbar className="h-20 bg-white border-b border-border px-20 flex items-center justify-between">
       {/* Logo */}
       <Link href="/dashboard" className="text-lg font-bold text-ink">
         ApartmentAgent
