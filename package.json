@@ -1,0 +1,36 @@
+{
+  "name": "apartmentagent",
+  "version": "1.0.0",
+  "description": "AI agent that calls apartment listings on your behalf, asks your specific questions, and only schedules viewings worth your time.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elbionredenica/apartmentagent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/elbionredenica/apartmentagent/issues"
+  },
+  "homepage": "https://github.com/elbionredenica/apartmentagent#readme",
+  "dependencies": {
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "lucide-react": "^1.7.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  }
+}
