@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  aerospike:
+    image: aerospike/aerospike-server:latest
+    container_name: aerospike
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "3002:3002"
+    environment:
+      - NAMESPACE=apartment_agent
+    volumes:
+      - aerospike-data:/opt/aerospike/data
+    command: ["asd", "--config-file", "/etc/aerospike/aerospike.conf"]
+
+volumes:
+  aerospike-data:

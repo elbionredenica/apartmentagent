@@ -13,7 +13,7 @@ VALUES (
     '["no_pets", "ground_floor_only"]'::jsonb
 );
 
--- Insert mock listings
+-- Insert mock listings (using real phone number for demo)
 INSERT INTO listings (external_id, source, address, city, state, rent, bedrooms, bathrooms, phone, description, is_available)
 VALUES 
 (
@@ -25,7 +25,7 @@ VALUES
     2800,
     2,
     2.0,
-    '+14155551234',
+    '+16283036336',
     'Beautiful 2BR apartment in SOMA. Pet-friendly building. Quiet neighborhood. Recently renovated kitchen.',
     true
 ),
@@ -38,7 +38,7 @@ VALUES
     2500,
     2,
     1.0,
-    '+14155555678',
+    '+16283036336',
     'Cozy 2BR in downtown. No pets allowed. Great for professionals. Walking distance to BART.',
     true
 ),
@@ -51,7 +51,7 @@ VALUES
     3200,
     3,
     2.0,
-    '+14155559012',
+    '+16283036336',
     'Spacious 3BR in Mission District. Pet-friendly with dog park. Washer/dryer in unit. Parking included.',
     true
 );
