@@ -12,6 +12,7 @@ import {
   Bath,
   Phone,
   User,
+  Calendar,
 } from "lucide-react";
 
 interface DetailsDrawerProps {
@@ -103,6 +104,20 @@ export function DetailsDrawer({
             <span className="font-medium">Not a fit:</span>{" "}
             {listing.failureReason.replace(/_/g, " ")}
           </p>
+        </div>
+      )}
+
+      {viewing?.calendarEventId && (
+        <div className="mb-6">
+          <a
+            href={viewing.calendarEventId}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-ink transition-colors duration-160 hover:border-ink-mid"
+          >
+            <Calendar size={14} />
+            Open Calendar Draft
+          </a>
         </div>
       )}
 

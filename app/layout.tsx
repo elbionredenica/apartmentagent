@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ApartmentAgent",
+  title: "Scout",
   description:
-    "AI agent that calls apartment listings on your behalf, asks your specific questions, and only schedules viewings worth your time.",
+    "Scout calls apartment listings on your behalf, asks your specific questions, and only schedules viewings worth your time.",
 };
 
 export default async function RootLayout({

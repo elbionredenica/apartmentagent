@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { NavBar } from "@/components/NavBar";
+import { resolveBackendUserForViewer } from "@/lib/backend-user";
 import { getViewer } from "@/lib/session";
 
 export default async function DashboardLayout({
@@ -10,6 +11,14 @@ export default async function DashboardLayout({
   const viewer = await getViewer();
   if (!viewer) {
     redirect("/");
+  }
+
+  const backendUser = await resolveBackendUserForViewer(viewer);
+  if (!backendUser) {
+    redirect("/");
+  }
+  if (!backendUser.onboarding_complete) {
+    redirect("/chat");
   }
 
   return (

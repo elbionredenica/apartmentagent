@@ -4,6 +4,7 @@ export interface Preferences {
   mustHaves: string[];
   niceToHaves: string[];
   moveInTimeline?: string;
+  tourAvailability?: string;
   customQuestions: string[];
   notes?: string;
 }
@@ -34,5 +35,6 @@ export interface DraftProfile {
   locations?: string[];
   mustHaves?: string[];
   moveInTimeline?: string;
+  tourAvailability?: string;
   customQuestions?: string[];
 }

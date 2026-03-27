@@ -52,7 +52,7 @@ export function NavBar({ viewer }: NavBarProps) {
     <nav data-navbar className="h-20 bg-white border-b border-border px-20 flex items-center justify-between">
       {/* Logo */}
       <Link href="/dashboard" className="text-lg font-bold text-ink">
-        ApartmentAgent
+        Scout
       </Link>
 
       {/* Right section */}

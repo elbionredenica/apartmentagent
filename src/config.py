@@ -28,9 +28,22 @@ class Settings(BaseSettings):
     
     # Webhook base URL
     webhook_base_url: str = "http://localhost:8000"
+
+    # Auth0 / Google Calendar
+    auth0_domain: Optional[str] = None
+    auth0_management_client_id: Optional[str] = None
+    auth0_management_client_secret: Optional[str] = None
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+
+    # Airbyte
+    airbyte_client_id: Optional[str] = None
+    airbyte_client_secret: Optional[str] = None
+    airbyte_connection_id: Optional[str] = None
+    rent_cast_api: Optional[str] = None
     
     class Config:
-        env_file = ".env"
+        env_file = ("backend/.env", ".env", ".env.local")
         case_sensitive = False
         extra = "ignore"  # Ignore extra fields in .env
 

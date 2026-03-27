@@ -38,7 +38,7 @@ export function HeroSection({ onDemoEntry, loading }: HeroSectionProps) {
           </h1>
 
           <p className="text-md text-ink-mid leading-relaxed mb-8 max-w-lg">
-            ApartmentAgent calls listings for you, asks your deal-breaker
+            Scout calls listings for you, asks your deal-breaker
             questions, and only books viewings that actually match what you need.
           </p>
 

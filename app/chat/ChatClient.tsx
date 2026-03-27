@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import type { Message, DraftProfile, ChatResponse } from "@/types";
 import { ChatPanel } from "@/components/chat/ChatPanel";
@@ -13,11 +13,7 @@ export function ChatClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  // Send initial greeting on first render
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized) {
-    setInitialized(true);
-    // Trigger initial agent message
+  useEffect(() => {
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,7 +32,7 @@ export function ChatClient() {
           setDraftProfile((prev) => ({ ...prev, ...data.profilePatch }));
         }
       });
-  }
+  }, []);
 
   const handleSend = useCallback(
     async (text: string) => {

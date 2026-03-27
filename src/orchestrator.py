@@ -3,6 +3,11 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from typing import Dict, Any
 import json
 import asyncio
+import re
+from datetime import datetime, timedelta
+from urllib.parse import quote
+from zoneinfo import ZoneInfo
+import httpx
 
 from src.models import ListingState, ListingStatus, CallOutcome
 from src.db import db
@@ -56,6 +61,253 @@ async def _wait_for_call_completion(call_id: str) -> Dict[str, Any]:
         await asyncio.sleep(settings.bland_poll_interval_seconds)
 
     raise TimeoutError(f"Call {call_id} did not complete within timeout")
+
+
+WEEKDAY_LOOKUP = {
+    "mon": 0,
+    "monday": 0,
+    "tue": 1,
+    "tues": 1,
+    "tuesday": 1,
+    "wed": 2,
+    "wednesday": 2,
+    "thu": 3,
+    "thur": 3,
+    "thurs": 3,
+    "thursday": 3,
+    "fri": 4,
+    "friday": 4,
+    "sat": 5,
+    "saturday": 5,
+    "sun": 6,
+    "sunday": 6,
+}
+
+
+def _next_occurrence(weekday: int, hour: int, minute: int) -> datetime:
+    tz = ZoneInfo("America/Los_Angeles")
+    now = datetime.now(tz)
+    days_ahead = (weekday - now.weekday()) % 7
+    scheduled = (now + timedelta(days=days_ahead)).replace(
+        hour=hour,
+        minute=minute,
+        second=0,
+        microsecond=0,
+    )
+    if scheduled <= now:
+        scheduled += timedelta(days=7)
+    return scheduled
+
+
+def _parse_time_components(text: str) -> tuple[int, int] | None:
+    match = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b", text)
+    if not match:
+        return None
+
+    hour = int(match.group(1))
+    minute = int(match.group(2) or 0)
+    meridiem = match.group(3)
+    if meridiem == "pm" and hour != 12:
+        hour += 12
+    if meridiem == "am" and hour == 12:
+        hour = 0
+    return hour, minute
+
+
+def _extract_schedule_window(transcript: str, availability_text: str | None = None) -> tuple[datetime, datetime] | None:
+    lowered = " ".join(transcript.lower().split())
+    time_components = _parse_time_components(lowered)
+    tz = ZoneInfo("America/Los_Angeles")
+    now = datetime.now(tz)
+
+    scheduled: datetime | None = None
+
+    if time_components:
+        hour, minute = time_components
+        if "tomorrow" in lowered:
+            scheduled = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+        elif "today" in lowered:
+            scheduled = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if scheduled <= now:
+                scheduled += timedelta(days=1)
+        else:
+            weekday_match = re.search(
+                r"\b(monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)\b",
+                lowered,
+            )
+            if weekday_match:
+                scheduled = _next_occurrence(WEEKDAY_LOOKUP[weekday_match.group(1)], hour, minute)
+
+    if scheduled is None and availability_text:
+        lowered_availability = availability_text.lower()
+        availability_time = _parse_time_components(lowered_availability)
+        weekday_match = re.search(
+            r"\b(monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)\b",
+            lowered_availability,
+        )
+        if availability_time and weekday_match:
+            hour, minute = availability_time
+            scheduled = _next_occurrence(WEEKDAY_LOOKUP[weekday_match.group(1)], hour, minute)
+
+    if scheduled is None:
+        return None
+
+    return scheduled, scheduled + timedelta(minutes=30)
+
+
+async def _get_auth0_management_token() -> str | None:
+    if not (
+        settings.auth0_domain
+        and settings.auth0_management_client_id
+        and settings.auth0_management_client_secret
+    ):
+        return None
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            f"https://{settings.auth0_domain}/oauth/token",
+            json={
+                "client_id": settings.auth0_management_client_id,
+                "client_secret": settings.auth0_management_client_secret,
+                "audience": f"https://{settings.auth0_domain}/api/v2/",
+                "grant_type": "client_credentials",
+            },
+        )
+        response.raise_for_status()
+        return response.json().get("access_token")
+
+
+async def _get_google_calendar_access_token(user_email: str) -> str | None:
+    management_token = await _get_auth0_management_token()
+    if not management_token:
+        return None
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.get(
+            f"https://{settings.auth0_domain}/api/v2/users-by-email",
+            headers={"Authorization": f"Bearer {management_token}"},
+            params={"email": user_email},
+        )
+        response.raise_for_status()
+        users = response.json()
+
+    for auth0_user in users:
+        for identity in auth0_user.get("identities", []):
+            if identity.get("provider") == "google-oauth2" and identity.get("access_token"):
+                return identity["access_token"]
+    return None
+
+
+async def _create_google_calendar_event(
+    user_email: str,
+    address: str,
+    start: datetime,
+    end: datetime,
+) -> str | None:
+    google_access_token = await _get_google_calendar_access_token(user_email)
+    if not google_access_token:
+        return None
+
+    event_body = {
+        "summary": f"Scout tour: {address}",
+        "location": address,
+        "description": "Booked by Scout after confirming the listing was a strong fit.",
+        "start": {
+            "dateTime": start.isoformat(),
+            "timeZone": "America/Los_Angeles",
+        },
+        "end": {
+            "dateTime": end.isoformat(),
+            "timeZone": "America/Los_Angeles",
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+            headers={
+                "Authorization": f"Bearer {google_access_token}",
+                "Content-Type": "application/json",
+            },
+            json=event_body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("htmlLink") or payload.get("id")
+
+
+def _build_google_calendar_draft_link(address: str, start: datetime, end: datetime) -> str:
+    start_utc = start.astimezone(ZoneInfo("UTC")).strftime("%Y%m%dT%H%M%SZ")
+    end_utc = end.astimezone(ZoneInfo("UTC")).strftime("%Y%m%dT%H%M%SZ")
+    title = quote(f"Scout tour: {address}")
+    details = quote("Drafted by Scout after matching the listing to your criteria.")
+    location = quote(address)
+    return (
+        "https://calendar.google.com/calendar/render"
+        f"?action=TEMPLATE&text={title}&dates={start_utc}%2F{end_utc}"
+        f"&details={details}&location={location}"
+    )
+
+
+async def _create_booked_viewing(
+    user_id: str,
+    user_email: str,
+    listing_id: str,
+    address: str,
+    transcript: str,
+    availability_text: str | None,
+) -> bool:
+    schedule_window = _extract_schedule_window(transcript, availability_text)
+    if not schedule_window:
+        return False
+
+    scheduled_at, end_at = schedule_window
+    calendar_event_id = await _create_google_calendar_event(
+        user_email=user_email,
+        address=address,
+        start=scheduled_at,
+        end=end_at,
+    )
+    if not calendar_event_id:
+        calendar_event_id = _build_google_calendar_draft_link(address, scheduled_at, end_at)
+
+    existing = await db.fetchval(
+        "SELECT id FROM viewings WHERE user_id = %s AND listing_id = %s LIMIT 1",
+        user_id,
+        listing_id,
+    )
+
+    if existing:
+        await db.execute(
+            """
+            UPDATE viewings
+            SET scheduled_at = %s,
+                duration_minutes = 30,
+                calendar_event_id = %s,
+                status = 'scheduled',
+                updated_at = NOW()
+            WHERE id = %s
+            """,
+            scheduled_at,
+            calendar_event_id,
+            existing,
+        )
+        return True
+
+    await db.execute(
+        """
+        INSERT INTO viewings (
+            user_id, listing_id, scheduled_at, duration_minutes,
+            calendar_event_id, status, created_at, updated_at
+        )
+        VALUES (%s, %s, %s, 30, %s, 'scheduled', NOW(), NOW())
+        """,
+        user_id,
+        listing_id,
+        scheduled_at,
+        calendar_event_id,
+    )
+    return True
 
 # Node functions
 async def check_criteria_node(state: ListingState) -> Dict[str, Any]:
@@ -172,6 +424,10 @@ async def call_prescreen_node(state: ListingState) -> Dict[str, Any]:
         if user["has_pet"]
         else "Skip pet questions because the client does not have a pet."
     )
+    preference_data = user.get("preferences") or {}
+    must_haves = preference_data.get("mustHaves") or []
+    custom_questions = preference_data.get("customQuestions") or []
+    tour_availability = preference_data.get("tourAvailability") or "the next few weekday afternoons"
 
     opening_line = (
         f"Hi, I'm calling on behalf of a client who's interested in the apartment at "
@@ -190,15 +446,20 @@ Listing:
 - Bedrooms: {listing['bedrooms']}
 
 Renter:
+- Exact apartment address to reference if needed: {listing['address']}
 - Budget cap: ${user['max_budget']}
 - Bedroom target: {user['min_bedrooms']}-{user['max_bedrooms']}
 - Pet details: {str(user['pet_weight_lbs']) + "-pound " + user['pet_type'] if user['has_pet'] else "no pet"}
+- Tour availability: {tour_availability}
+- Top priorities: {", ".join(must_haves) if must_haves else "quiet and overall fit"}
+- Extra questions to ask if it still sounds good: {", ".join(custom_questions) if custom_questions else "none"}
 
 Your tone:
 - Sound like a normal, polite human assistant, not a robot.
 - Speak casually but professionally.
 - Keep each sentence short and easy to follow.
 - Do not over-explain or announce what you are about to do.
+- Use contractions and brief acknowledgements so the call feels human.
 
 Open with this exact sentence:
 "{opening_line}"
@@ -207,6 +468,8 @@ After they say yes, move through the questions naturally:
 - Ask whether the unit is still available.
 - Ask: "{pet_line}"
 - Ask how quiet it is during normal work hours, around 9 to 5.
+- If the listing still sounds good after those answers, ask whether they have a tour slot that fits this availability: "{tour_availability}".
+- If there is an extra custom question and the conversation is going smoothly, ask it before you wrap up.
 
 Conversation rules:
 - Ask one thing at a time and wait for the answer.
@@ -214,13 +477,15 @@ Conversation rules:
 - If they interrupt, adapt naturally.
 - Do not repeat the full address unless they ask.
 - Do not mention any other address.
+- Ignore any placeholder address you may have seen elsewhere, especially Main Street. The only valid address for this call is {listing['address']}.
 - Do not invent details.
 - Keep the whole call under 90 seconds.
 
 Ending rules:
 - If the unit is unavailable, thank them and end the call.
 - If pets are not allowed, thank them and end the call.
-- If all three answers are collected, give a brief, natural recap in one sentence, thank them, and end the call.
+- If you get a concrete tour day and time, repeat it once naturally so the transcript contains the exact slot.
+- If all the answers are collected, give a brief, natural recap in one sentence, thank them, and end the call.
 - After saying goodbye, end the call cleanly without reopening the conversation.
 """
     
@@ -346,8 +611,27 @@ async def analyze_prescreen_node(state: ListingState) -> Dict[str, Any]:
                 "next_action": "end"
             }
     
-    # Passed pre-screen
-    print(f"✅ Passed pre-screen")
+    listing_row = await db.fetchrow("SELECT address FROM listings WHERE id = %s", state.listing_id)
+    listing_address = listing_row[0] if listing_row else "Apartment viewing"
+    user_preferences = user.get("preferences") or {}
+    booked = await _create_booked_viewing(
+        user_id=state.user_id,
+        user_email=user["email"],
+        listing_id=state.listing_id,
+        address=listing_address,
+        transcript=state.prescreen_transcript,
+        availability_text=user_preferences.get("tourAvailability"),
+    )
+
+    if booked:
+        print(f"✅ Passed pre-screen and booked viewing")
+        return {
+            **state.dict(),
+            "status": ListingStatus.BOOKED,
+            "next_action": "end"
+        }
+
+    print(f"✅ Passed pre-screen but no concrete viewing slot was booked")
     return {
         **state.dict(),
         "status": ListingStatus.PRESCREENED,

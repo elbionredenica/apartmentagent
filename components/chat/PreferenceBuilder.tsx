@@ -11,6 +11,7 @@ import {
   Star,
   Calendar,
   HelpCircle,
+  Clock3,
 } from "lucide-react";
 
 interface PreferenceBuilderProps {
@@ -84,6 +85,14 @@ export function PreferenceBuilder({
       icon: Calendar,
       category: "Move-in Timeline",
       value: profile.moveInTimeline.replace(/_/g, " "),
+    });
+  }
+
+  if (profile.tourAvailability) {
+    cards.push({
+      icon: Clock3,
+      category: "Tour Availability",
+      value: profile.tourAvailability,
     });
   }
 

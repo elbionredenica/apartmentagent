@@ -57,7 +57,12 @@ export async function getViewer(): Promise<Viewer> {
     }
   }
 
-  return await getDemoViewer();
+  const demoViewer = await getDemoViewer();
+  if (demoViewer) {
+    return demoViewer;
+  }
+
+  return null;
 }
 
 export async function getUserId(): Promise<string | null> {
