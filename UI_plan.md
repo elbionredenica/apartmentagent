@@ -1,10 +1,12 @@
 # ApartmentAgent — Frontend UX Plan
 
+This document covers product flow, page behavior, component structure, and API expectations.
+Visual styling, motion, color, and presentation details live in the separate style design document.
+
 ## Stack
 Planned stack for the new UI implementation:
 
 - **Framework**: Next.js (App Router)
-- **Styling**: Tailwind CSS
 - **Backend for UI**: Next.js route handlers over Ghost/Postgres
 - **Auth**: Demo session / seeded user for MVP, Auth0 via `@auth0/nextjs-auth0` in phase 2
 - **Real-time**: SSE from `/api/users/:userId/stream` (polling only as a temporary fallback)
@@ -26,13 +28,13 @@ Planned stack for the new UI implementation:
 
 ## Page 1 — Login (`/`)
 
-**Purpose**: Entry point. Clean first impression for the demo and a place to enter demo mode before Auth0 is wired.
+**Purpose**: Entry point and a place to enter demo mode before Auth0 is wired.
 
 **Layout**:
-- Left half: brand statement, value prop, 3 stat counters (calls made, avg tours saved, listings qualified)
-- Right half: access card
-  - primary CTA: `Enter Demo`
-  - secondary CTA: `Continue with Auth0` when phase 2 auth is enabled
+- brand statement and value summary
+- access area
+- primary CTA: `Enter Demo`
+- secondary CTA: `Continue with Auth0` when phase 2 auth is enabled
 
 **Behavior**:
 - Demo entry loads the seeded demo user and redirects to `/chat`
@@ -47,15 +49,15 @@ Planned stack for the new UI implementation:
 
 ### Layout: Two-column
 
-**Left panel (~60%) — Chat interface**
+**Chat panel**
 - Agent bubbles on left, user bubbles on right
 - Typing indicator while agent is processing
 - Text input + send at bottom
 - Quick-reply chips for common answers ("No pets", "ASAP", "Yes", "No")
 
-**Right panel (~40%) — Live Preference Builder**
-- Starts empty: subtle placeholder text *"Your search profile will appear here as we talk"*
-- As Claude extracts each piece of info from the conversation, a preference card **animates in** (slide + fade from bottom)
+**Live Preference Builder**
+- Starts empty with placeholder text
+- As Claude extracts each piece of info from the conversation, a preference card appears
 - Cards grouped by category:
   - Budget
   - Location
@@ -66,7 +68,7 @@ Planned stack for the new UI implementation:
   - Move-in Timeline
   - Custom Questions
 - Each card shows the value in plain language e.g. *"Max $3,000/mo incl. utilities"*
-- Cards get a subtle green border once agent confirms them back in conversation
+- Cards update once the agent confirms them back in conversation
 
 ### Agent Auto-Start Logic
 
@@ -102,7 +104,7 @@ Frontend detects this flag, calls `POST /api/searches`, and only then transition
 ### Transition Sequence
 
 1. Agent sends final message: *"Got everything I need. I'm calling 8 listings now — I'll book the ones worth your time."*
-2. Preference cards on the right do a brief "lock in" animation (borders turn gold)
+2. Preference cards move into their confirmed state
 3. Frontend sends the normalized profile to `POST /api/searches`
 4. After the search-start request succeeds → navigate to `/dashboard`
 5. Chat UI **shrinks to a persistent collapsed bar** at the very bottom of the dashboard
@@ -117,7 +119,7 @@ Frontend detects this flag, calls `POST /api/searches`, and only then transition
 
 ---
 
-### Left (~30%) — Live Task Sidebar
+### Live Task Sidebar
 
 A vertical pipeline tracker. Every listing the agent works on appears as a card and updates state live.
 
@@ -151,43 +153,29 @@ The UI maps those states to friendlier labels:
 
 **Each listing card shows:**
 - Address (truncated to one line)
-- State badge (colored pill)
-- Pulsing animated border while state is "Reaching Out"
+- State badge
 - Timestamp of last update
 - Failure reason when state = `failed`
 - Latest score when available
 
-**State badge colors:**
-| State            | Color                        |
-|------------------|------------------------------|
-| Evaluating       | Gold                         |
-| Queued           | Muted amber                  |
-| Reaching Out     | Blue with pulse animation    |
-| Deep Screening   | Teal                         |
-| Ready to Book    | Emerald                      |
-| Booked           | Green                        |
-| Unable to Reach  | Grey / muted                 |
-| Not a Fit        | Red / muted                  |
-
-Cards animate in one by one as the agent queues each listing. State transitions cross-fade smoothly.
+Cards appear as the agent queues each listing and update as state changes arrive.
 
 ---
 
-### Right (~70%) — Calendar
+### Calendar
 
 Weekly calendar view of the current week.
 
 - Source of truth is the `viewings` dataset, not listing state alone
 - Booked appointments appear as calendar events **live** when a new `viewings` record arrives
 - Each event block: address, time slot, landlord contact name
-- Color coding: green for booked, amber for pending reschedule or follow-up states if added later
 - Clicking an event → detail popover showing:
   - Full address + rent
   - Why it passed or what still needs follow-up
   - Landlord contact info
   - Prep notes for the viewing
   - Link to transcript/details drawer
-- While agent is still working: subtle placeholder slots that get replaced by real bookings as they come in
+- While agent is still working, the calendar can show open space until bookings arrive
 
 ### Details / Transcript Drawer
 
@@ -218,7 +206,7 @@ Persistent bar at the very bottom of the dashboard:
 
 **Purpose**: Deep-dive comparison page after the dashboard MVP exists. Transcript retrieval itself still ships in the dashboard details drawer.
 
-### Layout: True 50/50 split
+### Layout: Two-panel
 
 **Left — Your Profile**
 Structured preference cards. Static reference panel.
@@ -248,7 +236,7 @@ app/
 ├── chat/
 │   └── page.tsx                → ChatPage
 │       ├── ChatPanel           → messages, input, quick-reply chips
-│       └── PreferenceBuilder   → animated live preference cards
+│       └── PreferenceBuilder   → live preference cards
 ├── dashboard/
 │   └── page.tsx                → DashboardPage
 │       ├── Sidebar             → live listing pipeline cards
@@ -330,7 +318,7 @@ response: { userId: string, seeded: true }
 | 2 | Chat → preference cards build themselves live on the right as user talks |
 | 3 | Agent auto-detects enough info → sends final message → frontend starts the search |
 | 4 | Dashboard loads → sidebar starts populating one listing at a time with canonical state updates mapped to friendly labels |
-| 5 | First booked viewing record arrives → a calendar event animates in live |
+| 5 | First booked viewing record arrives → a calendar event appears live |
 | 6 | More bookings trickle in → calendar fills up |
 | 7 | Collapsed chat bar at bottom shows live progress counter |
 | 8 | Click a calendar event or listing → detail drawer with transcript, scores, and feedback flow |
