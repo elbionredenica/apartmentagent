@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { NavBar } from "@/components/NavBar";
-import { getViewer } from "@/lib/session";
+import { getViewer, hasStartedSearch } from "@/lib/session";
 
 export default async function DashboardLayout({
   children,
@@ -10,6 +10,10 @@ export default async function DashboardLayout({
   const viewer = await getViewer();
   if (!viewer) {
     redirect("/");
+  }
+
+  if (!(await hasStartedSearch(viewer.userId))) {
+    redirect("/chat");
   }
 
   return (

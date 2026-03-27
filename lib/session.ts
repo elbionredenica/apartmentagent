@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { auth0 } from "@/lib/auth0";
 
 const USER_ID_COOKIE = "userId";
+const SEARCH_STARTED_COOKIE = "searchStartedFor";
 
 export type Viewer =
   | {
@@ -64,6 +65,15 @@ export async function getUserId(): Promise<string | null> {
   return (await getViewer())?.userId ?? null;
 }
 
+export async function hasStartedSearch(userId: string | null): Promise<boolean> {
+  if (!userId) {
+    return false;
+  }
+
+  const cookieStore = await cookies();
+  return cookieStore.get(SEARCH_STARTED_COOKIE)?.value === userId;
+}
+
 export async function setUserSession(userId: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(USER_ID_COOKIE, userId, {
@@ -75,7 +85,23 @@ export async function setUserSession(userId: string): Promise<void> {
   });
 }
 
+export async function setSearchStarted(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(SEARCH_STARTED_COOKIE, userId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+}
+
 export async function clearUserSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(USER_ID_COOKIE);
+}
+
+export async function clearSearchState(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(SEARCH_STARTED_COOKIE);
 }

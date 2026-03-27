@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserId } from "@/lib/session";
+import { getUserId, setSearchStarted } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   const userId = await getUserId();
@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
   // Mode A: just acknowledge the search start
   // Mode B: update users table with preferences, trigger pipeline
   void preferences;
+  await setSearchStarted(userId);
 
   return NextResponse.json({ userId, searchStarted: true });
 }

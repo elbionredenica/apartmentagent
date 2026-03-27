@@ -44,14 +44,14 @@ export function HeroSection({ onDemoEntry, loading }: HeroSectionProps) {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <a
-              href="/auth/login?screen_hint=signup"
+              href="/auth/login?returnTo=/chat&screen_hint=signup"
               className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-6 py-3.5 text-base font-semibold text-white transition-all duration-160 hover:bg-accent-dark"
             >
               Sign Up with Auth0
               <ArrowRight size={16} />
             </a>
             <a
-              href="/auth/login"
+              href="/auth/login?returnTo=/chat"
               className="inline-flex items-center justify-center rounded-md border-[1.5px] border-border px-6 py-3.5 text-base font-semibold text-ink transition-all duration-160 hover:border-ink-mid"
             >
               Log In
