@@ -39,3 +39,12 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Next.js
+.next/
+out/
+node_modules/
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts

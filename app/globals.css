@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-white: #FFFFFF;
+  --color-off-white: #F7F6F5;
+  --color-border: #EBEBEB;
+  --color-ink: #222222;
+  --color-ink-mid: #484848;
+  --color-ink-muted: #767676;
+  --color-accent: #FF5A5F;
+  --color-accent-light: #FFF0F0;
+  --color-accent-dark: #E04E53;
+  --color-success: #008A05;
+  --color-warning: #B45309;
+  --color-error: #C13515;
+
+  /* Badge-specific colors */
+  --color-badge-shortlisted-bg: #FFF8E6;
+  --color-badge-shortlisted-text: #92670A;
+  --color-badge-booked-bg: #EDFBEE;
+  --color-badge-muted-bg: #F5F5F5;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Font Sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-md: 18px;
+  --font-size-lg: 22px;
+  --font-size-xl: 28px;
+  --font-size-2xl: 36px;
+
+  /* Spacing (extending defaults) */
+  --spacing-18: 72px;
+  --spacing-20: 80px;
+}
+
+/* Base styles */
+body {
+  color: var(--color-ink);
+  background: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* View Transitions */
+::view-transition-old(root) {
+  animation: vt-slide-out 250ms ease-in;
+}
+::view-transition-new(root) {
+  animation: vt-slide-in 300ms ease-out;
+}
+
+@keyframes vt-slide-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes vt-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Keep NavBar stable during transitions */
+nav[data-navbar] {
+  view-transition-name: navbar;
+}
+::view-transition-old(navbar),
+::view-transition-new(navbar) {
+  animation: none;
+}
