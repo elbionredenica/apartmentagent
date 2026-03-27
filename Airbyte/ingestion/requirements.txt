@@ -1,0 +1,5 @@
+# HTTP client for Airbyte Cloud API calls
+httpx
+
+# Load .env variables
+python-dotenv
